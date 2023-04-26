@@ -1,0 +1,115 @@
+default:
+  image: debian:trixie-slim
+
+stages:
+  - prepare
+  - build
+
+fetch dependencies:
+  stage: prepare
+  variables:
+    RKBIN_REPO_URL: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/hardware-enablement/rockchip-3588/rkbin.git
+    RK3588_BL31_URL: https://gitlab.collabora.com/hardware-enablement/rockchip-3588/trusted-firmware-a/-/jobs/artifacts/rockchip/raw/build/rk3588/release/bl31/bl31.elf?job=build%20rk3588
+    RK3576_BL31_URL: https://gitlab.collabora.com/hardware-enablement/rockchip-3588/trusted-firmware-a/-/jobs/artifacts/rockchip/raw/build/rk3576/release/bl31/bl31.elf?job=build%20rk3576
+  before_script:
+    - apt update
+    - apt install -y git wget
+  script:
+    - mkdir -p artifacts
+    - git clone --depth 1 -b master ${RKBIN_REPO_URL} artifacts/rkbin
+    - mkdir -p artifacts/trusted-firmware-a
+    - wget -O artifacts/trusted-firmware-a/rk3588-bl31.elf ${RK3588_BL31_URL}
+    - wget -O artifacts/trusted-firmware-a/rk3576-bl31.elf ${RK3576_BL31_URL}
+  artifacts:
+    paths:
+      - artifacts/rkbin
+      - artifacts/trusted-firmware-a
+
+.build rockchip:
+  stage: build
+  needs:
+    - "fetch dependencies"
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+    CROSS_COMPILE: aarch64-linux-gnu-
+    ARCH: arm64
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: "1"
+  before_script:
+    - apt update
+    - apt install -y bc build-essential
+                        crossbuild-essential-arm64
+                        device-tree-compiler
+                        git
+                        python3
+                        bison
+                        flex
+                        lzop
+                        python3-setuptools
+                        swig
+                        python3-dev
+                        libssl-dev
+                        python3-pyelftools
+                        uuid-dev
+                        gnutls-dev
+    - if [[ "$BL31_TYPE" == "vendor" ]]; then export BL31=${VENDOR_BL31} ; else export BL31=${UPSTREAM_BL31}; fi
+    - export TARGET=$(echo ${CI_JOB_NAME} | sed "s/^build //" | sed "s/:.*$//")
+    - export BUILDCONFIG="${TARGET}_defconfig"
+  script:
+    # build
+    - echo "Build ${BUILDCONFIG}"
+    - make ${BUILDCONFIG}
+    - make -j$(nproc)
+
+    # build proprietary usb loader
+    # the directory-dance here is because boot_merger shipped in rkbin
+    # doesn't seem to support the "--prepath" option which is available in
+    # downstream U-Boot.
+    - cd artifacts/rkbin && ./tools/boot_merger ${MINIALL_FILE} && mv *spl_loader*.bin ../.. && cd ../..
+  artifacts:
+    paths:
+      - u-boot.itb
+      - idbloader.img
+      - u-boot-rockchip.bin
+      - u-boot-rockchip-spi.bin
+      - rk35*_spl_loader_*.bin
+
+.build rk3588:
+  extends: .build rockchip
+  variables:
+    MINIALL_FILE: RKBOOT/RK3588MINIALL.ini
+    VENDOR_BL31: artifacts/rkbin/bin/rk35/rk3588_bl31_v1.47.elf
+    UPSTREAM_BL31: artifacts/trusted-firmware-a/rk3588-bl31.elf
+    ROCKCHIP_TPL: artifacts/rkbin/bin/rk35/rk3588_ddr_lp4_2112MHz_lp5_2400MHz_v1.18.bin
+
+.build rk3576:
+  extends: .build rockchip
+  variables:
+    MINIALL_FILE: RKBOOT/RK3576MINIALL.ini
+    VENDOR_BL31: artifacts/rkbin/bin/rk35/rk3576_bl31_v1.12.elf
+    UPSTREAM_BL31: artifacts/trusted-firmware-a/rk3576-bl31.elf
+    ROCKCHIP_TPL: artifacts/rkbin/bin/rk35/rk3576_ddr_lp4_2112MHz_lp5_2736MHz_v1.08.bin
+
+build rock5b-rk3588:
+  extends: .build rk3588
+  parallel:
+    matrix:
+      - BL31_TYPE:
+        - upstream
+        - vendor
+
+build sige5-rk3576:
+  extends: .build rk3576
+  parallel:
+    matrix:
+      - BL31_TYPE:
+        - upstream
+        - vendor
+
+build rock4d-rk3576:
+  extends: .build rk3576
+  parallel:
+    matrix:
+      - BL31_TYPE:
+        - upstream
+        - vendor
