@@ -2197,6 +2197,12 @@ static void tcpm_init(struct udevice *dev)
 	else
 		port->vbus_vsafe0v = true;
 
+	if (port->self_powered)
+		tcpm_set_cc(dev, TYPEC_CC_OPEN);
+	else
+		tcpm_set_cc(dev, tcpm_default_state(port) == SNK_UNATTACHED ?
+				TYPEC_CC_RD : tcpm_rp_cc(port));
+
 	tcpm_set_state(dev, tcpm_default_state(port), 0);
 
 	if (drvops->get_cc(dev, &cc1, &cc2) == 0)
@@ -2320,7 +2326,7 @@ static void tcpm_poll_event(struct udevice *dev)
 	const struct dm_tcpm_ops *drvops = dev_get_driver_ops(dev);
 	struct tcpm_port *port = dev_get_uclass_plat(dev);
 
-	if (!drvops->get_vbus(dev))
+	if (!drvops->get_vbus(dev) && (tcpm_default_state(port) == SNK_UNATTACHED))
 		return;
 
 	while (port->poll_event_cnt < TCPM_POLL_EVENT_TIME_OUT) {
