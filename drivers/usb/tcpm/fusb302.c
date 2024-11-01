@@ -940,7 +940,7 @@ static int fusb302_get_src_cc_status(struct udevice *dev,
 		return ret;
 
 	fusb302_i2c_read(dev, FUSB_REG_SWITCHES0, &status0);
-	dev_dbg(dev, "get_src_cc_status switches: 0x%0x", status0);
+	dev_dbg(dev, "get_src_cc_status switches: 0x%0x\n", status0);
 
 	/* Step 2: Set compararator volt to differentiate between Open and Rd */
 	ret = fusb302_i2c_write(dev, FUSB_REG_MEASURE, rd_mda);
@@ -952,7 +952,7 @@ static int fusb302_get_src_cc_status(struct udevice *dev,
 	if (ret)
 		return ret;
 
-	dev_dbg(dev, "get_src_cc_status rd_mda status0: 0x%0x", status0);
+	dev_dbg(dev, "get_src_cc_status rd_mda status0: 0x%0x\n", status0);
 	if (status0 & FUSB_REG_STATUS0_COMP) {
 		*cc = TYPEC_CC_OPEN;
 		return 0;
@@ -968,7 +968,7 @@ static int fusb302_get_src_cc_status(struct udevice *dev,
 	if (ret)
 		return ret;
 
-	dev_dbg(dev, "get_src_cc_status ra_mda status0: 0x%0x", status0);
+	dev_dbg(dev, "get_src_cc_status ra_mda status0: 0x%0x\n", status0);
 	if (status0 & FUSB_REG_STATUS0_COMP)
 		*cc = TYPEC_CC_RD;
 	else
