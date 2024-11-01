@@ -10,6 +10,7 @@
 #include <asm/gpio.h>
 #include <linux/delay.h>
 #include <linux/err.h>
+#include <power/regulator.h>
 #include <dm/device_compat.h>
 #include <usb/tcpm.h>
 #include "fusb302_reg.h"
@@ -50,10 +51,13 @@ struct fusb302_chip {
 
 	/* port status */
 	bool vconn_on;
+	bool vbus_on;
 	bool vbus_present;
 	enum typec_cc_polarity cc_polarity;
 	enum typec_cc_status cc1;
 	enum typec_cc_status cc2;
+
+	struct udevice *vbus;
 };
 
 static int fusb302_i2c_write(struct udevice *dev, u8 address, u8 data)
@@ -506,7 +510,28 @@ done:
 
 static int fusb302_set_vbus(struct udevice *dev, bool on, bool charge)
 {
-	return 0;
+	struct fusb302_chip *chip = dev_get_priv(dev);
+	int ret = 0;
+
+	if (chip->vbus_on == on) {
+		dev_dbg(dev, "vbus is already %s\n", on ? "On" : "Off");
+	} else {
+		if (CONFIG_IS_ENABLED(DM_REGULATOR) && chip->vbus) {
+			if (on)
+				ret = regulator_set_enable(chip->vbus, true);
+			else
+				ret = regulator_set_enable(chip->vbus, false);
+			if (ret < 0) {
+				dev_dbg(dev, "cannot %s vbus regulator, ret=%d\n",
+					on ? "enable" : "disable", ret);
+				return ret;
+			}
+		}
+		chip->vbus_on = on;
+		dev_dbg(dev, "vbus := %s\n", on ? "On" : "Off");
+	}
+
+	return ret;
 }
 
 static int fusb302_pd_tx_flush(struct udevice *dev)
@@ -1293,6 +1318,22 @@ static int fusb302_get_connector_node(struct udevice *dev, ofnode *connector_nod
 	return 0;
 }
 
+static int fusb302_probe(struct udevice *dev)
+{
+	struct fusb302_chip *chip = dev_get_priv(dev);
+	int ret;
+
+	if (CONFIG_IS_ENABLED(DM_REGULATOR)) {
+		ret = device_get_supply_regulator(dev, "vbus-supply", &chip->vbus);
+		if (ret && ret != -ENOENT) {
+			dev_err(dev, "Failed to get vbus-supply regulator\n");
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
 static struct dm_tcpm_ops fusb302_ops = {
 	.get_connector_node = fusb302_get_connector_node,
 	.init = fusb302_init,
@@ -1320,4 +1361,5 @@ U_BOOT_DRIVER(fusb302) = {
 	.of_match = fusb302_ids,
 	.ops = &fusb302_ops,
 	.priv_auto = sizeof(struct fusb302_chip),
+	.probe = fusb302_probe,
 };
