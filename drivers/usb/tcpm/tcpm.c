@@ -56,6 +56,28 @@ const char * const typec_cc_status_name[] = {
 	[TYPEC_CC_RP_3_0]	= "rp-3.0",
 };
 
+static const char * const typec_ctrl_msg_type_name[] = {
+	[PD_CTRL_GOOD_CRC]		= "GoodCRC",
+	[PD_CTRL_GOTO_MIN]		= "GotoMin",
+	[PD_CTRL_ACCEPT]		= "Accept",
+	[PD_CTRL_REJECT]		= "Reject",
+	[PD_CTRL_PING]			= "Ping",
+	[PD_CTRL_PS_RDY]		= "PS_RDY",
+	[PD_CTRL_GET_SOURCE_CAP]	= "Get_Source_Cap",
+	[PD_CTRL_GET_SINK_CAP]		= "Get_Sink_Cap",
+	[PD_CTRL_DR_SWAP]		= "DR_Swap",
+	[PD_CTRL_PR_SWAP]		= "PR_Swap",
+	[PD_CTRL_VCONN_SWAP]		= "VCONN_Swap",
+	[PD_CTRL_WAIT]			= "Wait",
+	[PD_CTRL_SOFT_RESET]		= "Soft_Reset",
+	[PD_CTRL_NOT_SUPP]		= "Not_Supported",
+	[PD_CTRL_GET_SOURCE_CAP_EXT]	= "Get_Source_Cap_Extended",
+	[PD_CTRL_GET_STATUS]		= "Get_Status",
+	[PD_CTRL_FR_SWAP]		= "FR_Swap",
+	[PD_CTRL_GET_PPS_STATUS]	= "Get_PPS_Status",
+	[PD_CTRL_GET_COUNTRY_CODES]	= "Get_Country_Codes",
+};
+
 static inline bool tcpm_cc_is_sink(enum typec_cc_status cc)
 {
 	return cc == TYPEC_CC_RP_DEF ||
@@ -824,7 +846,7 @@ static void tcpm_pd_ctrl_request(struct udevice *dev,
 	case PD_CTRL_GET_PPS_STATUS:
 	case PD_CTRL_GET_COUNTRY_CODES:
 		/* Currently not supported */
-		dev_err(dev, "TCPM: Currently not supported type %#x\n", type);
+		dev_err(dev, "TCPM: Received unsupported control request: %s\n", typec_ctrl_msg_type_name[type]);
 		tcpm_queue_message(dev, PD_MSG_CTRL_NOT_SUPP);
 		break;
 	default:
