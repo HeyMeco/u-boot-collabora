@@ -46,8 +46,10 @@ build armsom-sige5:
     - make sige5-rk3576_defconfig
     - make -j$(nproc)
 
-    # TODO: usb loader
+    # proprietary USB loader
+    - cd $CI_PROJECT_DIR/../rkbin && ./tools/boot_merger RKBOOT/RK3576MINIALL.ini && mv *spl_loader*.bin $CI_PROJECT_DIR
 
   artifacts:
     paths:
       - u-boot-rockchip.bin
+      - rk3576_spl_loader_*.bin
