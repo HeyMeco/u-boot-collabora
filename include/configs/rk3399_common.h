@@ -13,8 +13,6 @@
 #define CFG_SYS_SDRAM_BASE		0
 #define SDRAM_MAX_SIZE			0xf8000000
 
-#ifndef CONFIG_XPL_BUILD
-
 #ifndef ROCKCHIP_DEVICE_SETTINGS
 #define ROCKCHIP_DEVICE_SETTINGS
 #endif
@@ -31,13 +29,18 @@
 	"ramdisk_addr_r=0x12180000\0"	\
 	"kernel_comp_size=0x8000000\0"
 
+#if defined(CONFIG_SPL_DFU) && defined(CONFIG_XPL_BUILD)
+#define CFG_EXTRA_ENV_SETTINGS				\
+	"dfu_alt_info_ram=u-boot.itb ram "		\
+	__stringify(CONFIG_SPL_LOAD_FIT_ADDRESS) " "	\
+	__stringify(CONFIG_SYS_DFU_MAX_FILE_SIZE) "\0"
+#else
 #define CFG_EXTRA_ENV_SETTINGS		\
 	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0"	\
 	"partitions=" PARTS_DEFAULT	\
 	ENV_MEM_LAYOUT_SETTINGS		\
 	ROCKCHIP_DEVICE_SETTINGS	\
 	"boot_targets=" BOOT_TARGETS "\0"
-
-#endif /* CONFIG_XPL_BUILD */
+#endif
 
 #endif /* __CONFIG_RK3399_COMMON_H */
