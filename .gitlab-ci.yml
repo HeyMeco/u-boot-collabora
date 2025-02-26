@@ -4,7 +4,8 @@ default:
 stages:
   - build
 
-build armsom-sige5:
+#TODO: Merge with sige5 build
+build radxa-rock4d:
   stage: build
   variables:
     DEBIAN_FRONTEND: noninteractive
@@ -43,7 +44,7 @@ build armsom-sige5:
     # build
     - cd $CI_PROJECT_DIR
     - make -j$(nproc) mrproper
-    - make sige5-rk3576_defconfig
+    - make rock4d-rk3576_defconfig
     - make -j$(nproc)
 
     # proprietary USB loader
