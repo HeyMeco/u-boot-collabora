@@ -11,6 +11,7 @@ build armsom-sige5:
     GIT_STRATEGY: fetch
     GIT_DEPTH: "1"
     RKBIN_REPO_URL: "https://github.com/rockchip-linux/rkbin.git"
+    TFA_REPO_URL: "https://review.trustedfirmware.org/TF-A/trusted-firmware-a.git"
   before_script:
     - apt update
     - apt install -y bc build-essential
@@ -32,16 +33,25 @@ build armsom-sige5:
     # download rkbin
     - git clone --depth 1 -b master ${RKBIN_REPO_URL} $CI_PROJECT_DIR/../rkbin
 
+    # download TF-A
+    - git clone --depth 1 -b master ${TFA_REPO_URL} $CI_PROJECT_DIR/../trusted-firmware-a
+
     # prepare PATH
     - export CROSS_COMPILE=aarch64-linux-gnu-
     - export ARCH=arm64
 
-    # Point BL31 and TPL to rkbin, dynamically extract the right ones from Rockchip's official repo
-    - export BL31=../rkbin/$(cat $CI_PROJECT_DIR/../rkbin/RKTRUST/RK3576TRUST.ini | gawk 'match($0, /^PATH=(.*bl31.*)/, a) { print a[1] }')
+    # build TF-A
+    - cd $CI_PROJECT_DIR/../trusted-firmware-a
+    - make E=0 PLAT=rk3576 bl31
+
+    - cd $CI_PROJECT_DIR
+
+    # Point BL31 to the TF-A we built
+    - export BL31=../trusted-firmware-a/build/rk3576/release/bl31/bl31.elf
+    # Point TPL to rkbin, dynamically extract the right one from Rockchip's official repo
     - export ROCKCHIP_TPL=../rkbin/$(cat $CI_PROJECT_DIR/../rkbin/RKBOOT/RK3576MINIALL.ini | gawk 'match($0, /^FlashData=(.*)/, a) { print a[1] }')
 
     # build
-    - cd $CI_PROJECT_DIR
     - make -j$(nproc) mrproper
     - make sige5-rk3576_defconfig
     - make -j$(nproc)
