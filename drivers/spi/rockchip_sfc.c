@@ -108,6 +108,7 @@
 #define  SFC_VER_3			0x3
 #define  SFC_VER_4			0x4
 #define  SFC_VER_5			0x5
+#define  SFC_VER_8			0x8
 
 /* Delay line controller resiter */
 #define SFC_DLL_CTRL0			0x3C
@@ -211,6 +212,14 @@ static u32 rockchip_sfc_get_max_iosize(struct rockchip_sfc *sfc)
 		return SFC_MAX_IOSIZE_VER4;
 
 	return SFC_MAX_IOSIZE_VER3;
+}
+
+static int rockchip_sfc_clk_set_rate(struct rockchip_sfc *sfc, unsigned long speed)
+{
+	if (sfc->version >= SFC_VER_8)
+		return clk_set_rate(&sfc->clk, speed * 2);
+	else
+		return clk_set_rate(&sfc->clk, speed);
 }
 
 static int rockchip_sfc_init(struct rockchip_sfc *sfc)
@@ -600,7 +609,7 @@ static int rockchip_sfc_set_speed(struct udevice *bus, uint speed)
 		return 0;
 
 #if CONFIG_IS_ENABLED(CLK)
-	int ret = clk_set_rate(&sfc->clk, speed);
+	int ret = rockchip_sfc_clk_set_rate(sfc, speed);
 
 	if (ret < 0) {
 		dev_err(sfc->dev, "set_freq=%dHz fail, check if it's the cru support level\n",
