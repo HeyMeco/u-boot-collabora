@@ -302,6 +302,33 @@ config TARGET_ROCK_5C_RK3588S
 	  2x USB 2.0 Type-A HOST port
 	  1x USB Type-C 5V power port
 
+config TARGET_ROCK5T_RK3588
+	bool "Radxa ROCK5T RK3588 board"
+	select BOARD_LATE_INIT
+	help
+	  Radxa ROCK5T is a Rockchip RK3588 based SBC (Single Board Computer)
+	  by Radxa.
+
+	  Specification:
+
+	  Rockchip Rk3588 SoC
+	  4x ARM Cortex-A76, 4x ARM Cortex-A55
+	  4/8/16/24/32GB memory LPDDR5
+	  Mali G610MC4 GPU
+	  2x 4-lane or 4x 2-lane MIPI CSI input
+	  soldered eMMC (optional)
+	  SPI flash for bootloader
+	  uSD slot
+	  2x USB 2.0 Type-A, 2x USB 3.1 Gen1 Type-A, 1x USB 3.1 Gen1 Type-C
+	  2x HDMI 2.1 output, 1x HDMI input
+	  2x 2.5 Gbps Ethernet port
+	  2x M.2 M-key connector, PCIe 3 2-lanes each
+	  On-board PCIe Wi-Fi/BT module
+	  40-pin IO header including UART, SPI, I2C and 5V DC power in
+	  USB PD over USB Type-C
+	  5.5mm OD x 2.5mm ID barrel jack power input
+	  Size: 110mm x 82mm
+
 config TARGET_SIGE7_RK3588
 	bool "ArmSoM Sige7 RK3588 board"
 	select BOARD_LATE_INIT
@@ -440,6 +467,7 @@ source "board/pine64/quartzpro64-rk3588/Kconfig"
 source "board/turing/turing-rk1-rk3588/Kconfig"
 source "board/radxa/rock5a-rk3588s/Kconfig"
 source "board/radxa/rock5b-rk3588/Kconfig"
+source "board/radxa/rock5t-rk3588/Kconfig"
 source "board/radxa/rock-5-itx-rk3588/Kconfig"
 source "board/radxa/rock-5c-rk3588s/Kconfig"
 source "board/rockchip/evb_rk3588/Kconfig"
