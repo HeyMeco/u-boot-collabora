@@ -1,0 +1,7 @@
+ROCK5T-RK3588
+M:	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+S:	Maintained
+F:	board/radxa/rock5t-rk3588
+F:	include/configs/rock5t-rk3588.h
+F:	configs/rock5t-rk3588_defconfig
+F:	arch/arm/dts/rk3588-rock-5t-u-boot.dtsi
