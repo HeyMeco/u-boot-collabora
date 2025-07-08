@@ -155,6 +155,16 @@
 	bootph-pre-ram;
 };
 
+&usbdrd3_0 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&usbdrd_dwc3_0 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
 &vopb {
 	bootph-some-ram;
 };
