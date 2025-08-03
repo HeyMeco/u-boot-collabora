@@ -14,7 +14,7 @@
 #ifndef CONFIG_XPL_BUILD
 
 #ifndef BOOT_TARGETS
-#define BOOT_TARGETS	"mmc1 mmc0 nvme scsi usb pxe dhcp spi"
+#define BOOT_TARGETS	"mmc1 nvme mmc0 scsi usb pxe dhcp spi"
 #endif
 
 #ifdef CONFIG_ARM64
